@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Foto Otomatis</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
+        h1 { color: #333; }
+        .galeri { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
+        .galeri img { width: 100%; max-width: 250px; height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <h1>Galeri Foto Pribadi</h1>
+    <p>Foto di bawah ini akan tampil secara otomatis!</p>
+
+    <div class="galeri" id="galeri-foto">Memuat foto...</div>
+
+    <script>
+        // Ganti 'bihefa33-project' dengan username GitHub Anda dan 'bihefa33-project.github.io' dengan nama repository Anda
+        const username = 'bihefa33-project';
+        const repo = 'bihefa33-project.github.io';
+        const folder = 'images'; // Nama folder tempat Anda menyimpan foto
+
+        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
+
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                const galeriDiv = document.getElementById('galeri-foto');
+                galeriDiv.innerHTML = ''; // Kosongkan teks loading
+
+                // Saring hanya file gambar (jpg, png, jpeg)
+                data.forEach(file => {
+                    if(file.type === 'file' && /\.(jpg|jpeg|png|webp)$/i.test(file.name)) {
+                        const img = document.createElement('img');
+                        img.src = file.download_url;
+                        img.alt = file.name;
+                        galeriDiv.appendChild(img);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Gagal memuat foto:', error);
+                document.getElementById('galeri-foto').innerText = 'Gagal memuat foto.';
+            });
+    </script>
+
+</body>
+</html>
+
