@@ -7,22 +7,96 @@
     <style>
         body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
         h1 { color: #333; }
+        
+        /* Galeri Grid */
         .galeri { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 20px; }
-        .galeri img { width: 100%; max-width: 250px; height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card { 
+            background: #fff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+        }
+        .card img { 
+            width: 250px; 
+            height: 200px; 
+            object-fit: cover; 
+            cursor: pointer; 
+            transition: transform 0.2s ease;
+        }
+        .card img:hover { transform: scale(1.03); }
+        .btn-download {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn-download:hover { background-color: #0056b3; }
+
+        /* Modal Lightbox (Tampilan Zoom) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        .modal-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: #ccc; }
     </style>
 </head>
 <body>
 
     <h1>Galeri Foto Pribadi</h1>
-    <p>Foto di bawah ini akan tampil secara otomatis!</p>
+    <p>Klik foto untuk memperbesar atau gunakan tombol download untuk menyimpan.</p>
 
     <div class="galeri" id="galeri-foto">Memuat foto...</div>
 
+    <!-- Modal Lightbox -->
+    <div id="imageModal" class="modal">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="imgFull">
+        <div class="modal-actions">
+            <a id="downloadModalLink" href="#" download class="btn-download" target="_blank">Download Foto</a>
+        </div>
+    </div>
+
     <script>
-        // Ganti 'bihefa33-project' dengan username GitHub Anda dan 'bihefa33-project.github.io' dengan nama repository Anda
         const username = 'bihefa33-project';
         const repo = 'bihefa33-project.github.io';
-        const folder = 'images'; // Nama folder tempat Anda menyimpan foto
+        const folder = 'images';
 
         const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
 
@@ -30,15 +104,32 @@
             .then(response => response.json())
             .then(data => {
                 const galeriDiv = document.getElementById('galeri-foto');
-                galeriDiv.innerHTML = ''; // Kosongkan teks loading
+                galeriDiv.innerHTML = '';
 
-                // Saring hanya file gambar (jpg, png, jpeg)
                 data.forEach(file => {
                     if(file.type === 'file' && /\.(jpg|jpeg|png|webp)$/i.test(file.name)) {
+                        // Membuat elemen pembungkus (Card)
+                        const card = document.createElement('div');
+                        card.className = 'card';
+
+                        // Elemen Gambar
                         const img = document.createElement('img');
                         img.src = file.download_url;
                         img.alt = file.name;
-                        galeriDiv.appendChild(img);
+                        // Fitur Klik untuk Zoom
+                        img.onclick = () => openModal(file.download_url, file.name);
+
+                        // Tombol Download Kartu
+                        const downloadBtn = document.createElement('a');
+                        downloadBtn.href = file.download_url;
+                        downloadBtn.download = file.name;
+                        downloadBtn.className = 'btn-download';
+                        downloadBtn.innerText = 'Download';
+                        downloadBtn.target = '_blank';
+
+                        card.appendChild(img);
+                        card.appendChild(downloadBtn);
+                        galeriDiv.appendChild(card);
                     }
                 });
             })
@@ -46,8 +137,32 @@
                 console.error('Gagal memuat foto:', error);
                 document.getElementById('galeri-foto').innerText = 'Gagal memuat foto.';
             });
+
+        // Fungsi Buka Modal Zoom
+        function openModal(src, filename) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('imgFull');
+            const downloadLink = document.getElementById('downloadModalLink');
+
+            modal.style.display = 'flex';
+            modalImg.src = src;
+            downloadLink.href = src;
+            downloadLink.download = filename;
+        }
+
+        // Fungsi Tutup Modal
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // Tutup modal jika area luar gambar diklik
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
     </script>
 
 </body>
 </html>
-
